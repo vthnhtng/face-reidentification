@@ -53,34 +53,15 @@ def estimate_norm(landmark, image_size=112):
     return min_matrix, min_index
 
 
-def norm_crop_image(image: np.ndarray, landmark: np.ndarray, image_size: int = 112) -> np.ndarray:
-    # Ensure landmark is float32 numpy array
-    landmark = np.array(landmark, dtype=np.float32)
-    
-    # Define reference landmarks (destination points)
-    dst = np.array([
-        [38.2946, 51.6963],
-        [73.5318, 51.5014],
-        [56.0252, 71.7366],
-        [41.5493, 92.3655],
-        [70.7299, 92.2041]
-    ], dtype=np.float32)
-
-    # Scale destination points
-    dst = dst * (image_size/112)
-
-    # Calculate transformation matrix
-    M = cv2.estimateAffinePartial2D(landmark, dst)[0]
-    if M is None:  # Add error handling
-        raise ValueError("Could not calculate transformation matrix")
-        
-    # Ensure M is float32
-    M = np.array(M, dtype=np.float32)
-    
-    # Apply affine transformation
-    warped = cv2.warpAffine(image, M, (image_size, image_size), borderValue=0.0)
-    
-    return warped
+def norm_crop_image(image, landmark, image_size=112, mode='arcface'):
+    try:
+        M, pose_index = estimate_norm(landmark, image_size)
+        warped = cv2.warpAffine(image, M, (image_size, image_size), borderValue=0.0)
+        return warped
+    except Exception as e:
+        print(f"Error in norm_crop_image: {e}")
+        # Return a blank image of the requested size as fallback
+        return np.zeros((image_size, image_size, 3), dtype=np.uint8)
 
 
 def distance2bbox(points, distance, max_shape=None):

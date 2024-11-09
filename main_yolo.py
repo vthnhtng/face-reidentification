@@ -14,42 +14,44 @@ from utils.helpers import compute_similarity, draw_bbox_info, draw_bbox
 import serial
 import time
 
+# TODO: write a functions to send signal to ESP32 in other file follow class priciple
+
 # Modified serial connection setup with better error handling
 serial_enabled = False
 ser = None
 
-def initialize_serial():
-    global serial_enabled, ser
-    try:
-        ser = serial.Serial('COM4', 115200, timeout=1)
-        time.sleep(2)  # Wait for ESP32 to start up
-        serial_enabled = True
-        print("Successfully connected to ESP32 on COM4")
-    except serial.SerialException as e:
-        if "PermissionError" in str(e):
-            print("Error: Cannot access COM4 - Port may be in use by another program")
-            print("Please close any other applications using COM4 and try again")
-        else:
-            print(f"Warning: Could not open serial port: {e}")
-        serial_enabled = False
+# def initialize_serial():
+#     global serial_enabled, ser
+#     try:
+#         ser = serial.Serial('COM4', 115200, timeout=1)
+#         time.sleep(2)  # Wait for ESP32 to start up
+#         serial_enabled = True
+#         print("Successfully connected to ESP32 on COM4")
+#     except serial.SerialException as e:
+#         if "PermissionError" in str(e):
+#             print("Error: Cannot access COM4 - Port may be in use by another program")
+#             print("Please close any other applications using COM4 and try again")
+#         else:
+#             print(f"Warning: Could not open serial port: {e}")
+#         serial_enabled = False
 
-# Call initialize_serial at startup
-initialize_serial()
+# # Call initialize_serial at startup
+# initialize_serial()
 
-def send_signal_to_esp32():
-    global ser
-    if serial_enabled and ser:
-        try:
-            ser.write(b'FACE_DETECTED\n')
-            print("Signal sent to ESP32")
-        except serial.SerialException as e:
-            print(f"Error sending signal: {e}")
-            # If we lose connection, try to re-initialize
-            initialize_serial()
-    else:
-        print("Serial communication is disabled - skipping signal")
+# def send_signal_to_esp32():
+#     global ser
+#     if serial_enabled and ser:
+#         try:
+#             ser.write(b'FACE_DETECTED\n')
+#             print("Signal sent to ESP32")
+#         except serial.SerialException as e:
+#             print(f"Error sending signal: {e}")
+#             # If we lose connection, try to re-initialize
+#             initialize_serial()
+#     else:
+#         print("Serial communication is disabled - skipping signal")
 
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
 
 
@@ -191,8 +193,8 @@ def frame_processor(
                     max_similarity = similarity
                     best_match_name = name
 
-            if best_match_name == "NguyenQuangLinh":
-                send_signal_to_esp32()
+            # if best_match_name == "NguyenQuangLinh":
+            #     send_signal_to_esp32()
 
             if best_match_name != "Unknown":
                 color = colors[best_match_name]
