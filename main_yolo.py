@@ -11,43 +11,10 @@ import onnxruntime
 from typing import Union, List, Tuple
 from models import SCRFD, ArcFace
 from utils.helpers import compute_similarity, draw_bbox_info, draw_bbox
-import serial
-import time
+from uart_communication import UARTCommunicator
 
-# Modified serial connection setup with better error handling
-serial_enabled = False
-ser = None
-
-def initialize_serial():
-    global serial_enabled, ser
-    try:
-        ser = serial.Serial('COM4', 115200, timeout=1)
-        time.sleep(2)  # Wait for ESP32 to start up
-        serial_enabled = True
-        print("Successfully connected to ESP32 on COM4")
-    except serial.SerialException as e:
-        if "PermissionError" in str(e):
-            print("Error: Cannot access COM4 - Port may be in use by another program")
-            print("Please close any other applications using COM4 and try again")
-        else:
-            print(f"Warning: Could not open serial port: {e}")
-        serial_enabled = False
-
-# Call initialize_serial at startup
-initialize_serial()
-
-def send_signal_to_esp32():
-    global ser
-    if serial_enabled and ser:
-        try:
-            ser.write(b'FACE_DETECTED\n')
-            print("Signal sent to ESP32")
-        except serial.SerialException as e:
-            print(f"Error sending signal: {e}")
-            # If we lose connection, try to re-initialize
-            initialize_serial()
-    else:
-        print("Serial communication is disabled - skipping signal")
+# Initialize UART communication
+uart = UARTCommunicator()
 
 warnings.filterwarnings("ignore")
 
@@ -174,34 +141,30 @@ def frame_processor(
     # Force CPU inference
     detections = detector(frame, device='cpu')
 
-    bboxes = detections[0].boxes.xyxy.numpy()
-    kpss = detections[0].keypoints.xy.numpy()
+    bboxes = detections[0].boxes.xyxy.numpy()  # Remove .cpu() since we're already on CPU
+    kpss = detections[0].keypoints.xy.numpy()  # Remove .cpu() since we're already on CPU
+
+    # Send signal if any faces are detected
+    #if len(bboxes) > 0:
+       #end_signal_to_esp32()
 
     for bbox, kps in zip(bboxes, kpss):
-        try:
-            # Ensure keypoints are in correct format
-            kps = np.array(kps, dtype=np.float32).reshape(5, 2)
-            embedding = recognizer(frame, kps)
+        embedding = recognizer(frame, kps)
 
-            max_similarity = 0
-            best_match_name = "Unknown"
-            for target, name in targets:
-                similarity = compute_similarity(target, embedding)
-                if similarity > max_similarity and similarity > params.similarity_thresh:
-                    max_similarity = similarity
-                    best_match_name = name
+        max_similarity = 0
+        best_match_name = "Unknown"
+        for target, name in targets:
+            similarity = compute_similarity(target, embedding)
+            if similarity > max_similarity and similarity > params.similarity_thresh:
+                max_similarity = similarity
+                best_match_name = name
 
-            if best_match_name == "NguyenQuangLinh":
-                send_signal_to_esp32()
-
-            if best_match_name != "Unknown":
-                color = colors[best_match_name]
-                draw_bbox_info(frame, bbox, similarity=max_similarity, name=best_match_name, color=color)
-            else:
-                draw_bbox(frame, bbox, (255, 0, 0))
-        except Exception as e:
-            logging.error(f"Error processing face: {e}")
-            continue
+        if best_match_name != "Unknown":
+            uart.send_signal_to_esp32()  # Send signal with recognized name
+            color = colors[best_match_name]
+            draw_bbox_info(frame, bbox, similarity=max_similarity, name=best_match_name, color=color)
+        else:
+            draw_bbox(frame, bbox, (255, 0, 0))
 
     return frame
 
@@ -242,6 +205,9 @@ def main(params):
     cap.release()
     out.release()
     cv2.destroyAllWindows()
+
+    # Make sure to close the connection when you're done
+    uart.close()
 
 
 if __name__ == "__main__":
