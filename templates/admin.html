@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Image</title>
+    <style>
+        body {
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .main {
+            width: 500px;
+            height: 600px;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .screen {
+            border: solid 0.5px;
+        }
+        .btns {
+            width: 80%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn {
+            margin: 5px;
+            width: 40%;
+            height: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <h2>Capture new face ID</h2>
+        <div class="screen">
+            <video id="video" width="480" height="480" autoplay></video>
+            <canvas id="canvas" width="480" height="480" style="display: none;"></canvas>
+        </div>
+        <br>
+        <div class="btns">
+            <button class="btn" id="capture">Capture Image</button>
+            <button class="btn" id="send" disabled>Send to Server</button>
+        </div>
+    </div>
+    <script>
+        // Start the video stream
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        // Request permission and start the video stream
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(error => {
+                console.error("Error accessing the webcam: ", error);
+            });
+        
+        // Enable send button when canvas is displayed
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'style') {
+                    const sendButton = document.getElementById('send');
+                    if (canvas.style.display !== 'none') {
+                        sendButton.disabled = false;
+                    } else {
+                        sendButton.disabled = true;
+                    }
+                }
+            });
+        });
+
+        observer.observe(canvas, {
+            attributes: true
+        });
+
+        // Capture image on button click
+        document.getElementById('capture').addEventListener('click', () => {
+            // Draw video frame to canvas
+            context.drawImage(video, 0, 0, 480, 480);
+        });
+
+        // Send captured image to backend
+        document.getElementById('send').addEventListener('click', () => {
+            // Get data URL of the image
+            const dataURL = canvas.toDataURL('image/png');
+
+            // Send data to the backend
+            fetch('/upload-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: dataURL })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Server response:", data);
+                alert(data.message);
+            })
+            .catch(error => {
+                console.error("Error sending image:", error);
+            });
+        });
+    </script>
+</body>
+</html>
