@@ -11,8 +11,46 @@ import onnxruntime
 from typing import Union, List, Tuple
 from models import SCRFD, ArcFace
 from utils.helpers import compute_similarity, draw_bbox_info, draw_bbox
+import serial
+import time
+
+# Modified serial connection setup with better error handling
+serial_enabled = False
+ser = None
+
+def initialize_serial():
+    global serial_enabled, ser
+    try:
+        ser = serial.Serial('COM4', 115200, timeout=1)
+        time.sleep(2)  # Wait for ESP32 to start up
+        serial_enabled = True
+        print("Successfully connected to ESP32 on COM4")
+    except serial.SerialException as e:
+        if "PermissionError" in str(e):
+            print("Error: Cannot access COM4 - Port may be in use by another program")
+            print("Please close any other applications using COM4 and try again")
+        else:
+            print(f"Warning: Could not open serial port: {e}")
+        serial_enabled = False
+
+# Call initialize_serial at startup
+initialize_serial()
+
+def send_signal_to_esp32():
+    global ser
+    if serial_enabled and ser:
+        try:
+            ser.write(b'FACE_DETECTED\n')
+            print("Signal sent to ESP32")
+        except serial.SerialException as e:
+            print(f"Error sending signal: {e}")
+            # If we lose connection, try to re-initialize
+            initialize_serial()
+    else:
+        print("Serial communication is disabled - skipping signal")
 
 warnings.filterwarnings("ignore")
+
 
 
 def parse_args():
@@ -50,7 +88,7 @@ def parse_args():
     parser.add_argument(
         "--source",
         type=str,
-        default="./assets/in_video.mp4",
+        default="0",
         help="Video file or video camera source. i.e 0 - webcam"
     )
     parser.add_argument(
@@ -95,10 +133,11 @@ def build_targets(detector, recognizer, params: argparse.Namespace) -> List[Tupl
 
         image = cv2.imread(image_path)
         
-        detections = detector(image)
+        # Force CPU inference
+        detections = detector(image, device='cpu')
 
-        bboxes = detections[0].boxes.xyxy.cpu().numpy()
-        kpss = detections[0].keypoints.xy.cpu().numpy()
+        bboxes = detections[0].boxes.xyxy.numpy()  # Remove .cpu() since we're already on CPU
+        kpss = detections[0].keypoints.xy.numpy()  # Remove .cpu() since we're already on CPU
     
         if len(kpss) == 0:
             logging.warning(f"No face detected in {image_path}. Skipping...")
@@ -132,27 +171,37 @@ def frame_processor(
     Returns:
         np.ndarray: The processed video frame.
     """
-    detections = detector(frame)
+    # Force CPU inference
+    detections = detector(frame, device='cpu')
 
-    bboxes = detections[0].boxes.xyxy.cpu().numpy()
-    kpss = detections[0].keypoints.xy.cpu().numpy()
+    bboxes = detections[0].boxes.xyxy.numpy()
+    kpss = detections[0].keypoints.xy.numpy()
 
     for bbox, kps in zip(bboxes, kpss):
-        embedding = recognizer(frame, kps)
+        try:
+            # Ensure keypoints are in correct format
+            kps = np.array(kps, dtype=np.float32).reshape(5, 2)
+            embedding = recognizer(frame, kps)
 
-        max_similarity = 0
-        best_match_name = "Unknown"
-        for target, name in targets:
-            similarity = compute_similarity(target, embedding)
-            if similarity > max_similarity and similarity > params.similarity_thresh:
-                max_similarity = similarity
-                best_match_name = name
+            max_similarity = 0
+            best_match_name = "Unknown"
+            for target, name in targets:
+                similarity = compute_similarity(target, embedding)
+                if similarity > max_similarity and similarity > params.similarity_thresh:
+                    max_similarity = similarity
+                    best_match_name = name
 
-        if best_match_name != "Unknown":
-            color = colors[best_match_name]
-            draw_bbox_info(frame, bbox, similarity=max_similarity, name=best_match_name, color=color)
-        else:
-            draw_bbox(frame, bbox, (255, 0, 0))
+            if best_match_name == "NguyenQuangLinh":
+                send_signal_to_esp32()
+
+            if best_match_name != "Unknown":
+                color = colors[best_match_name]
+                draw_bbox_info(frame, bbox, similarity=max_similarity, name=best_match_name, color=color)
+            else:
+                draw_bbox(frame, bbox, (255, 0, 0))
+        except Exception as e:
+            logging.error(f"Error processing face: {e}")
+            continue
 
     return frame
 
@@ -160,7 +209,9 @@ def frame_processor(
 def main(params):
     setup_logging(params.log_level)
 
+    # Force CPU device
     detector = YOLO(params.det_weight)
+    detector.to('cpu')
     recognizer = ArcFace(params.rec_weight)
 
     targets = build_targets(detector, recognizer, params)
