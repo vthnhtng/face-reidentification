@@ -31,16 +31,28 @@ class ModelServices:
         self.recognizer = ArcFace(self.RECOGNIZER_WEIGHT)
         self.targets = self.build_targets()
 
+    def build_target_for_user(self, user_name: str):
+        """
+        Build target for a new user using face detection and recognition.
+        """
+        image_path = os.path.join(self.FACES_DIR, f"{user_name}.png")
+        image = cv2.imread(image_path)
+        detections = self.detector(image)
+
+        bboxes = detections[0].boxes.xyxy.cpu().numpy()
+        kpss = detections[0].keypoints.xy.cpu().numpy()
+
+        if len(kpss) == 0:
+            print(f"No face detected in {image_path}. Skipping...")
+            return
+
+        embedding = self.recognizer(image, kpss[0])
+        
+        self.targets.append((embedding, user_name))
 
     def build_targets(self):
         """
         Build targets using face detection and recognition.
-
-        Args:
-            detector (YOLO): Face detector model.
-            recognizer (ArcFaceONNX): Face recognizer model.
-            params (argparse.Namespace): Command line arguments.
-
         Returns:
             List[Tuple[np.ndarray, str]]: A list of tuples containing feature vectors and corresponding image names.
         """
@@ -74,12 +86,6 @@ class ModelServices:
     ) -> np.ndarray:
         """
         Process a video frame for face detection and recognition.
-
-        Args:
-            frame (np.ndarray): The video frame.
-            detector (YOLO): Face detector model.
-            recognizer (ArcFaceONNX): Face recognizer model.
-
         Returns:
             np.ndarray: The processed video frame.
         """

@@ -18,8 +18,6 @@ uart = UARTCommunicator()
 
 warnings.filterwarnings("ignore")
 
-
-
 def parse_args():
     parser = argparse.ArgumentParser(description="Face Detection-and-Recognition")
     parser.add_argument(
@@ -205,9 +203,6 @@ def main(params):
     cap.release()
     out.release()
     cv2.destroyAllWindows()
-
-    # Make sure to close the connection when you're done
-    uart.close()
 
 
 if __name__ == "__main__":
