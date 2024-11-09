@@ -24,11 +24,11 @@ class UARTCommunicator:
                 print(f"Warning: Could not open serial port: {e}")
             self.serial_enabled = False
 
-    def send_signal_to_esp32(self):
+    def send_open_signal_to_esp32(self):
         """Send signal to ESP32"""
         if self.serial_enabled and self.ser:
             try:
-                self.ser.write(b'FACE_DETECTED\n')
+                self.ser.write(b'OPEN\n')
                 print("Signal sent to ESP32")
             except serial.SerialException as e:
                 print(f"Error sending signal: {e}")

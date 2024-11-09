@@ -35,6 +35,9 @@ class ModelServices:
         """
         Build target for a new user using face detection and recognition.
         """
+        # Create faces directory if it doesn't exist
+        if not os.path.exists(self.FACES_DIR):
+            os.makedirs(self.FACES_DIR)
         image_path = os.path.join(self.FACES_DIR, f"{user_name}.png")
         image = cv2.imread(image_path)
         detections = self.detector(image)
@@ -57,6 +60,11 @@ class ModelServices:
             List[Tuple[np.ndarray, str]]: A list of tuples containing feature vectors and corresponding image names.
         """
         targets = []
+        
+        # Create faces directory if it doesn't exist
+        if not os.path.exists(self.FACES_DIR):
+            os.makedirs(self.FACES_DIR)
+            
         for filename in os.listdir(self.FACES_DIR):
             name = filename.split(".")[0]
             image_path = os.path.join(self.FACES_DIR, filename)
@@ -87,12 +95,16 @@ class ModelServices:
         """
         Process a video frame for face detection and recognition.
         Returns:
-            np.ndarray: The processed video frame.
+            Tuple[np.ndarray, bool]: A tuple containing:
+                - The processed video frame with face detection visualizations
+                - A boolean indicating if a known face was detected
         """
-        detections = self.detector(frame)
+        detections = self.detector(frame, verbose=False)
 
         bboxes = detections[0].boxes.xyxy.cpu().numpy()
         kpss = detections[0].keypoints.xy.cpu().numpy()
+
+        face_detected = False
 
         for bbox, kps in zip(bboxes, kpss):
             embedding = self.recognizer(frame, kps)
@@ -110,6 +122,6 @@ class ModelServices:
                 draw_bbox(frame, bbox, self.COLOR["unknown"])
             else:
                 draw_bbox_info(frame, bbox, similarity=max_similarity, name=best_match_name, color=self.COLOR["known"])
-            
+                face_detected = True
 
-        return frame
+        return frame, face_detected

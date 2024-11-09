@@ -6,31 +6,43 @@ import base64
 from PIL import Image
 from io import BytesIO
 from flask import Response
+from uart_communication import UARTCommunicator
 
 app = Flask(__name__)
 
 model_services = ModelServices()
+uart_communicator = UARTCommunicator()
 
 def gen_frames():
-    # Open a connection to the webcam (0 is the default camera)
     camera = cv2.VideoCapture(0)
 
     while True:
-        # Capture frame-by-frame
         success, frame = camera.read()
         if not success:
             break
         
-        out = model_services.frame_process(frame)
-        # Encode the frame in JPEG format
-        ret, buffer = cv2.imencode('.jpg', out)
-        # Convert the frame to bytes
-        out = buffer.tobytes()
-        # Yield frame as a multipart HTTP response
-        yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + out + b'\r\n')
+        processed_frame, face_detected = model_services.frame_process(frame)
 
-    # Release the camera when done
+        # Static variable to store the last time we sent a message
+        if not hasattr(gen_frames, 'last_send_time'):
+            gen_frames.last_send_time = 0
+
+        # Get current time
+        current_time = cv2.getTickCount() / cv2.getTickFrequency()
+
+        # Check if 2 seconds have passed since last send
+        if current_time - gen_frames.last_send_time >= 2.0 and face_detected:
+            uart_communicator.send_open_signal_to_esp32()
+            gen_frames.last_send_time = current_time
+
+        # Encode the frame in JPEG format
+        ret, buffer = cv2.imencode('.jpg', processed_frame)
+        # Convert the frame to bytes
+        processed_frame = buffer.tobytes()
+
+        yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + processed_frame + b'\r\n')
+
     camera.release()
 
 @app.route('/')
