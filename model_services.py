@@ -95,16 +95,14 @@ class ModelServices:
         """
         Process a video frame for face detection and recognition.
         Returns:
-            Tuple[np.ndarray, bool]: A tuple containing:
+            Tuple[np.ndarray, str]: A tuple containing:
                 - The processed video frame with face detection visualizations
-                - A boolean indicating if a known face was detected
+                - Best match name
         """
         detections = self.detector(frame, verbose=False)
 
         bboxes = detections[0].boxes.xyxy.cpu().numpy()
         kpss = detections[0].keypoints.xy.cpu().numpy()
-
-        face_detected = False
 
         for bbox, kps in zip(bboxes, kpss):
             embedding = self.recognizer(frame, kps)
@@ -122,6 +120,5 @@ class ModelServices:
                 draw_bbox(frame, bbox, self.COLOR["unknown"])
             else:
                 draw_bbox_info(frame, bbox, similarity=max_similarity, name=best_match_name, color=self.COLOR["known"])
-                face_detected = True
 
-        return frame, face_detected
+        return frame, best_match_name

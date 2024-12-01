@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+</head>
+<body>
+    <h1>Image Gallery</h1>
+
+    <div class="gallery">
+        {% for image in images %}
+            <div class="image-item">
+                <img src="{{ url_for('static', filename='logs/' + image) }}" alt="{{ image }}" style="width:200px;">
+            </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

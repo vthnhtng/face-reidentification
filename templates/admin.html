@@ -91,10 +91,43 @@
             height: 21px;
             box-sizing: border-box;
         }
+
+        .back {
+            position: absolute;
+            top: 50px;
+            right: 60px;
+            background-color: #6e99c7;
+            color: #ffffff;
+            padding: 10px 40px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: right;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+        }
+
+        .back:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .back span {
+            color: inherit;
+            font-size: 14px;
+        }
+
+        .back i {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="main">
+        <a class="back" href="{{ url_for('index') }}">
+            <i>&larr;</i><span>Back</span>
+        </a>
         <h1>Register new face ID</h1>
         <div class="container">
             <div class="column">

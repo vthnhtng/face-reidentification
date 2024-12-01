@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+    
+        h1 {
+            margin-bottom: 20px;
+            color: #343a40;
+            text-align: center;
+        }
+    
+        .flash-messages {
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+    
+        .flash-message {
+            padding: 10px;
+            background-color: #ffc107;
+            color: #212529;
+            border: 1px solid #ffca2c;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    
+        form {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+    
+        form div {
+            margin-bottom: 15px;
+        }
+    
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+    
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+    
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+        }
+    
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+    
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .back {
+            position: absolute;
+            top: 50px;
+            right: 60px;
+            background-color: #6e99c7;
+            color: #ffffff;
+            padding: 10px 40px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: right;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+        }
+
+        .back:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .back span {
+            color: inherit;
+            font-size: 14px;
+        }
+
+        .back i {
+            margin-right: 5px;
+        }
+    </style>    
+</head>
+
+<body>
+    <form action="{{ url_for('login') }}" method="post">
+        <a class="back" href="{{ url_for('index') }}">
+            <i>&larr;</i><span>Back</span>
+        </a>
+        <h1>Login to Admin page</h1>
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div>
+            <button type="submit">Login</button>
+        </div>
+        {% with messages = get_flashed_messages()%}
+            {% if messages%}
+                <div class="flash-messages">
+                {% for message in messages%}
+                    <div class="flash-message">{{message}}</div>
+                {%endfor%}
+                </div>
+            {%endif%}
+        {%endwith%}
+    </form>
+</body>
+
+</html>
