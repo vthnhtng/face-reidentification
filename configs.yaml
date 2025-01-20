@@ -1,0 +1,12 @@
+yolo:
+    weight: ./weights/yolov8n-face.pt
+    confidence_threshold: 0.5
+    face_per_frame: 1
+arcface:
+    weight: ./weights/w600k_r50.onnx
+    similarity_threshold: 0.4
+faiss:
+    index: ./embedding_storage_indexes/faiss.bin
+params:
+    image_extension: [jpg, jpeg, png]
+    faces_dir: ./faces
