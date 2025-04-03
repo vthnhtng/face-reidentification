@@ -1,24 +1,49 @@
 # Face Re-Identification system by YOLOv8 and ArcFace with simple web ui for new face registration
-## The origin repository is from https://github.com/yakhyo/face-reidentification
+## Original Repository
 
-1. Provide simple the web UI
-2. Register new faces through the web interface
-3. Face re-identification
+This project is based on the [face-reidentification repository](https://github.com/yakhyo/face-reidentification) by [yakhyo](https://github.com/yakhyo).
+
+## Features
+
+1. **Web Interface**: A simple and intuitive web UI for managing the system.
+2. **Face Registration**: Easily register new faces directly through the web interface.
+3. **Face Re-Identification**: Perform face re-identification using advanced detection and recognition techniques.
 
 ## Tech Stack
-1. YOLOv8 for face detection
-2. ArcFace for face recognition(generate embeddings)
-3. Qdrant vector database for vector storage and similar vectors retrieval
+
+1. **YOLOv8**: Utilized for accurate and efficient face detection.
+2. **ArcFace**: Generates embeddings for face recognition.
+3. **Qdrant Vector Database**: Stores embeddings and retrieves similar vectors for re-identification.
 
 ## Requirements
-- Python 3.8+
+
+- Python 3.8 or higher
 - PyTorch
 - OpenCV
 - Flask
-- Other dependencies listed in requirements.txt
+- Additional dependencies listed in `requirements.txt`
 
 ## Acknowledgments
-- Original work by [yakhyo](https://github.com/yakhyo/face-reidentification)
-- YOLOv8 by Ultralytics
+
+- Original repository by [yakhyo](https://github.com/yakhyo/face-reidentification)
+- [YOLOv8](https://github.com/ultralytics/ultralytics) by Ultralytics
 - ArcFace implementation
-- You can find model weights in the origin repo
+- Model weights are available in the original repository
+
+## How to Run
+
+1. Install Python 3.10.9 or a compatible version.
+2. Install dependencies:
+  ```bash
+  pip install -r requirements.txt
+  ```
+3. Start the Qdrant container:
+  ```bash
+  docker run -p 6333:6333 -p 6334:6334 \
+     -v "$(pwd)/qdrant_storage:/qdrant/storage:z" \
+     qdrant/qdrant
+  ```
+4. Launch the application:
+  ```bash
+  python app.py
+  ```
