@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recognition History</title>
+    <style>
+        table.logs {
+            border-collapse: collapse;
+            width: 80%;
+        }
+
+        table.logs th,
+        table.logs td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        table.logs th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+        }
+    </style>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+
+        .back {
+            position: absolute;
+            top: 50px;
+            right: 60px;
+            background-color: #6e99c7;
+            color: #ffffff;
+            padding: 10px 40px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: right;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+        }
+
+        .back:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .back span {
+            color: inherit;
+            font-size: 14px;
+        }
+
+        .back i {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <a class="back" href="{{ url_for('index') }}">
+            <i>&larr;</i><span>Back</span>
+        </a>
+        <h1>Face Recognition History</h1>
+        <div class="container">
+            <table class="logs">
+                <thead>
+                    <tr>
+                        <th>Face</th>
+                        <th>User</th>
+                        <th>Timestamp</th>
+                        <th>Similarity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for image in images|reverse %}
+                    {% set parts = image.split('_') %}
+                    {% set timestamp = parts[0] %}
+                    {% set user = parts[2].split('.')[0] %}
+                    {% set similarity = parts[1] %}
+                    <tr>
+                        <td>
+                            <img src="{{ url_for('static', filename='logs/' + image) }}" alt="{{ image }}">
+                        </td>
+                        <td>{{ user }}</td>
+                        <td>{{ timestamp }}</td>
+                        <td>{{ similarity }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Select all table cells in the "Timestamp" column
+        const timestampCells = document.querySelectorAll("table.logs td:nth-child(3)");
+        const percentCells = document.querySelectorAll("table.logs td:nth-child(4)");
+        // Loop through each cell and apply the conversion function
+        timestampCells.forEach((cell) => {
+            convert_timestamp(cell);
+        });
+
+        percentCells.forEach((cell) => {
+            convert_percetn(cell);
+        });
+    });
+
+    function convert_timestamp(tdElement) {
+        // Check if the element contains a timestamp
+        const timestamp = tdElement.textContent.trim();
+
+        if (!isNaN(timestamp) && timestamp) {
+            // Convert the timestamp to a number
+            const unixTimestamp = parseInt(timestamp, 10);
+
+            // Create a new Date object
+            const date = new Date(unixTimestamp * 1000);
+
+            // Format the date into dd/mm/yy hh:mm:ss
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+            const year = String(date.getFullYear());
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+
+            // Replace the timestamp with the formatted date
+            tdElement.textContent = formattedDate;
+        }
+    }
+
+    function convert_percetn(tdElement) {
+        // Check if the element contains a timestamp
+        const similarity = tdElement.textContent.trim();
+
+        tdElement.textContent = (parseFloat(similarity) * 100).toFixed(2) + "%";
+    }
+</script>
+
+</html>

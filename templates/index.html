@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Stream</title>
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+    
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    
+        .face-recognition {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    
+        img {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+    
+        .register {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .register a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+    
+        .register a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="face-recognition">
+            <h1>Webcam Video Stream</h1>
+            <img src="{{ url_for('video_feed') }}" width="640" height="480">
+        </div>
+        <div class="register">
+            <a href="{{ url_for('login') }}">Register a New Face ID</a>
+            <a href="{{ url_for('dashboard') }}">Recognition History</a>
+        </div>
+    </div>
+</body>
+
+</html>

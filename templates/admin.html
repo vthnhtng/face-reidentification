@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+    <style>
+        body {
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        video, canvas {
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #user_name {
+            padding: 19px 20px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            height: 21px;
+            box-sizing: border-box;
+        }
+
+        .back {
+            position: absolute;
+            top: 50px;
+            right: 60px;
+            background-color: #6e99c7;
+            color: #ffffff;
+            padding: 10px 40px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: right;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+        }
+
+        .back:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .back span {
+            color: inherit;
+            font-size: 14px;
+        }
+
+        .back i {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <a class="back" href="{{ url_for('index') }}">
+            <i>&larr;</i><span>Back</span>
+        </a>
+        <h1>Register new face ID</h1>
+        <div class="container">
+            <div class="column">
+                <h2>Webcam</h2>
+                <div class="webcam" width="640" height="480">
+                    <video id="video" width="640" height="480" autoplay></video>
+                </div>
+                <button class="btn" id="capture">Capture Image</button>
+            </div>
+            <div class="column">
+                <h2>Captured Image</h2>
+                <div class="capture">
+                    <canvas id="canvas" width="640" height="480"></canvas>
+                </div>
+                <div class="input-container">
+                    <input type="text" id="user_name" placeholder="Enter user name">
+                    <button class="btn" id="send_image">Send to Server</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Start the video stream
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        // Request permission and start the video stream
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(error => {
+                console.error("Error accessing the webcam: ", error);
+            });
+
+        // Capture image on button click
+        document.getElementById('capture').addEventListener('click', () => {
+            // Draw video frame to canvas
+            context.drawImage(video, 0, 0, 640, 480);
+        });
+
+        // Send captured image to backend
+        document.getElementById('send_image').addEventListener('click', () => {
+            // Get data URL of the image
+            const dataURL = canvas.toDataURL('image/png');
+            const username = document.getElementById('user_name').value;
+
+            if (username === '') {
+                alert("Please enter a user name");
+                return;
+            }
+
+            // Send data to the backend
+            fetch(`/upload-image`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    image: dataURL,
+                    username: username
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Server response:", data);
+                alert(data.message);
+            })
+            .catch(error => {
+                console.error("Error sending image:", error);
+            });
+        });
+    </script>
+</body>
+</html>

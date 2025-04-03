@@ -1,0 +1,9 @@
+onnx==1.16.1
+onnxruntime==1.18.1
+onnxruntime-gpu==1.18.0
+opencv-python==4.9.0.80
+numpy==1.25.0
+scikit-image==0.23.2
+ultralytics
+PyYAML==6.0.2
+qdrant-client==1.13.3
