@@ -35,5 +35,4 @@ class ArcFace(RecognizerInterface):
         Returns:
             np.ndarray: The facial embedding (feature vector).
         """
-        print("Generate embedding using ArcFace model")
         return self.model(image, keypoint)

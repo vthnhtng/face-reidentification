@@ -41,14 +41,12 @@ class Yolo(DetectorInterface):
             Tuple[np.ndarray, np.ndarray]: A tuple where the first element is
             bounding box and the second element is keypoints.
         """
-        print("Performing face detection using YOLO...")
         detections = self.model(image, conf=self.confidence_threshold, verbose=False)
         bboxes = detections[0].boxes.xyxy.cpu().numpy()
         kpss = detections[0].keypoints.xy.cpu().numpy()
 
         if len(bboxes) == 0 or len(kpss) == 0:
-            print("No faces detected.")
             return np.array([]), np.array([])
-
+        print(kpss[0].shape)
         return bboxes[0], kpss[0]
 

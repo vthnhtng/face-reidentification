@@ -39,7 +39,7 @@ This project is based on the [face-reidentification repository](https://github.c
   ```
 3. Start the Qdrant container:
   ```bash
-  docker run -p 6333:6333 -p 6334:6334 \
+  docker run -d -p 6333:6333 -p 6334:6334 \
      -v "$(pwd)/qdrant_storage:/qdrant/storage:z" \
      qdrant/qdrant
   ```
